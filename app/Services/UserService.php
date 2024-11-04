@@ -2,10 +2,9 @@
 
 namespace App\Services;
 
-use App\Http\Responses\ApiErrorResponse;
+use App\DTOs\UpdateUserDTO;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -36,26 +35,28 @@ class UserService
     /**
      * ایجاد یک کاربر جدید.
      *
-     * @param array $data
-     * @return User
+     * @param string $username نام کاربری
+     * @param string $first_name نام کوچک
+     * @param string $last_name نام خانوادگی
+     * @param string $email ایمیل
+     * @param string $password رمز عبور
+     * @return User کاربر جدید ایجاد شده
      * @throws ValidationException
      */
     public function createUser(
         string $username,
-        string $firstName,
-        string $lastName,
+        string $first_name,
+        string $last_name,
         string $email,
         string $password
     ): User {
         $data = [
             'username' => $username,
-            'first_name' => $firstName,
-            'last_name' => $lastName,
+            'first_name' => $first_name,
+            'last_name' => $last_name,
             'email' => $email,
             'password' => $password
         ];
-
-        $this->validateUser($data);
 
         return User::create($data);
     }
@@ -63,8 +64,8 @@ class UserService
     /**
      * دریافت یک کاربر خاص.
      *
-     * @param int $id
-     * @return User
+     * @param int $userId شناسه کاربر
+     * @return User کاربر
      */
     public function getUserById($userId)
     {
@@ -76,44 +77,23 @@ class UserService
     /**
      * بروزرسانی اطلاعات یک کاربر خاص.
      *
-     * @param int $id
-     * @param array $data
-     * @return User
+     * @param UpdateUserDTO $userDTO حاوی اطلاعات جدید کاربر
+     * @return User کاربر به‌روز شده
      * @throws ValidationException
      */
-    public function updateUser(
-        $userId,
-        ?string $username,
-        ?string $firstName,
-        ?string $lastName,
-        ?string $email,
-        ?string $password
-    ) {
-        $user = $this->getUserById($userId);
+    public function updateUser(UpdateUserDTO $userDTO)
+    {
+        $user = $this->getUserById($userDTO->user_id);
 
         $data = [
-            'username' => $username,
-            'first_name' => $firstName,
-            'last_name' => $lastName,
-            'email' => $email,
-            'password' => $password
+            'username' => $userDTO->username,
+            'first_name' => $userDTO->first_name,
+            'last_name' => $userDTO->last_name,
+            'email' => $userDTO->email,
+            'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
         ];
 
-        $validatedData = Validator::make($data, [
-            'username' => 'nullable|string|unique:users,username,' . $userId,
-            'first_name' => 'nullable|string|max:255',
-            'last_name' => 'nullable|string|max:255',
-            'email' => 'nullable|string|email|unique:users,email,' . $userId . '|max:255',
-            'password' => 'nullable|string|min:8'
-        ])->validate();
-
-        if (isset($validatedData['password'])) {
-            $validatedData['password'] = Hash::make($validatedData['password']);
-        }
-
-        $data = array_filter($validatedData);
-
-        $user->update($data);
+        $user->update(array_filter($data));
 
         return $user->fresh();
     }
@@ -121,7 +101,7 @@ class UserService
     /**
      * حذف یک کاربر خاص.
      *
-     * @param int $id
+     * @param int $userId شناسه کاربر
      * @return void
      */
     public function deleteUser(int $userId)
@@ -129,32 +109,5 @@ class UserService
         User::where(['id' => $userId])->findOrFail($userId);
 
         return User::destroy($userId);
-    }
-
-    /**
-     * اعتبارسنجی داده‌های کاربر.
-     *
-     * @param array $data
-     * @param int|null $userId
-     * @throws ValidationException
-     */
-    protected function validateUser(array $data)
-    {
-        $rules = [
-            'first_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'username' => 'required|string|unique:users|max:255',
-            'email' => 'required|string|email|unique:users|max:255',
-            'password' => 'required|string|min:8',
-            'role' => 'in:admin,user',
-        ];
-
-        $validatedData = Validator::make($data, $rules);
-
-        return $validatedData;
-
-        if ($validator->fails()) {
-            return new ApiErrorResponse('message', 'Failed to validation datas.');
-        }
     }
 }

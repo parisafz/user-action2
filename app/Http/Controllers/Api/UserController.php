@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\CreateUserDTO;
+use App\DTOs\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiErrorResponse;
 use App\Http\Responses\ApiSuccessResponse;
@@ -20,6 +22,11 @@ class UserController extends Controller
 {
     protected $userService;
 
+    /**
+     * سازنده کلاس UserController
+     *
+     * @param UserService $userService شی سرویس کاربر
+     */
     public function __construct(UserService $userService)
     {
         $this->userService = $userService;
@@ -28,6 +35,7 @@ class UserController extends Controller
     /**
      * نمایش لیست تمامی کاربران.
      *
+     * @param Request $request درخواست حاوی اطلاعات صفحه‌بندی
      * @return \Illuminate\Http\Response
      */
     public function index(Request $request)
@@ -45,19 +53,28 @@ class UserController extends Controller
     /**
      * ایجاد یک کاربر جدید.
      *
-     * @param \Illuminate\Http\Request $request
+     * @param \Illuminate\Http\Request $request درخواست حاوی اطلاعات کاربر جدید
      * @return \Illuminate\Http\Response
      */
     public function store(Request $request)
     {
+        $userDTO = new CreateUserDTO(
+            $request['username'],
+            $request['first_name'],
+            $request['last_name'],
+            $request['email'],
+            $request['password']
+        );
+
         try {
             $user = $this->userService->createUser(
-                $request['username'],
-                $request['first_name'],
-                $request['last_name'],
-                $request['email'],
-                $request['password']
+                $userDTO->username,
+                $userDTO->first_name,
+                $userDTO->last_name,
+                $userDTO->email,
+                $userDTO->password
             );
+
             return new ApiSuccessResponse($user, 'User registered successfully.', 201);
         } catch (\Exception $e) {
             return new ApiErrorResponse('message', 'Failed to register user: ' . $e->getMessage(), 400);
@@ -67,7 +84,7 @@ class UserController extends Controller
     /**
      * نمایش یک کاربر خاص.
      *
-     * @param int $id
+     * @param int $userId شناسه کاربر
      * @return \Illuminate\Http\Response
      */
     public function show($userId)
@@ -83,21 +100,23 @@ class UserController extends Controller
     /**
      * بروزرسانی اطلاعات یک کاربر خاص.
      *
-     * @param \Illuminate\Http\Request $request
-     * @param int $id
+     * @param \Illuminate\Http\Request $request درخواست حاوی اطلاعات جدید کاربر
+     * @param int $user_id شناسه کاربر
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $userId)
+    public function update(Request $request, $user_id): ApiSuccessResponse | ApiErrorResponse
     {
         try {
-            $updatedUser = $this->userService->updateUser(
-                $userId,
-                $request['username'] ?? null,
-                $request['first_name'] ?? null,
-                $request['last_name'] ?? null,
-                $request['email'] ?? null,
-                $request['password'] ?? null
+            $userDTO = new UpdateUserDTO(
+                $user_id,
+                $request->input('username'),
+                $request->input('first_name'),
+                $request->input('last_name'),
+                $request->input('email'),
+                $request->input('password')
             );
+
+            $updatedUser = $this->userService->updateUser($userDTO);
 
             return new ApiSuccessResponse($updatedUser, 'User updated successfully.');
         } catch (ModelNotFoundException $e) {
@@ -110,7 +129,7 @@ class UserController extends Controller
     /**
      * حذف یک کاربر خاص.
      *
-     * @param int $id
+     * @param int $id شناسه کاربر
      * @return \Illuminate\Http\Response
      */
     public function destroy($id)

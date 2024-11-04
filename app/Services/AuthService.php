@@ -2,26 +2,33 @@
 
 namespace App\Services;
 
+use App\DTOs\LoginDTO;
+use App\DTOs\LogoutDTO;
+use App\DTOs\UpdateUserDTO;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * کلاس AuthService
+ * 
+ * این کلاس مسئول انجام عملیات احراز هویت کاربران شامل 
+ * لاگین، لاگ‌اوت و به‌روزرسانی اطلاعات کاربر می‌باشد.
+ */
 class AuthService
 {
     /**
      * انجام عملیات لاگین کاربر.
      *
-     * @param string $email
-     * @param string $password
-     * @return User
+     * @param LoginDTO $authDTO حاوی اطلاعات ورود کاربر
+     * @return string|null توکن دسترسی کاربر یا null در صورت عدم موفقیت
      * @throws ValidationException
      */
-    public function login(string $email, string $password)
+    public function login(LoginDTO $authDTO)
     {
-        $data = ['email' => $email, 'password' => $password];
+        $data = ['email' => $authDTO->email, 'password' => $authDTO->password];
 
         if (Auth::attempt($data)) {
             $user = Auth::user();
@@ -31,22 +38,27 @@ class AuthService
 
             return $token;
         }
+
+        return null; // در صورت عدم موفقیت
     }
 
     /**
      * انجام عملیات خروج کاربر.
      *
-     * @return ApiResponse
+     * @param LogoutDTO $logoutDTO حاوی شناسه کاربر
+     * @return bool
      */
-    public function logout()
+    public function logout(LogoutDTO $logoutDTO)
     {
         $user = Auth::user();
 
-        if ($user) {
+        if ($user && $user->id === $logoutDTO->user_id) {
             $user->tokens()->delete();
-            return Auth::guard('api')->user(); // برای گرفتن کاربر احراز هویت شده در guard api
 
+            return true;
         }
+
+        return false; // در صورت عدم موفقیت
     }
 
     /**
@@ -71,57 +83,37 @@ class AuthService
 
             return $userData;
         }
+
+        return null; // اگر کاربر وارد نشده باشد
     }
 
     /**
-     * به‌روزرسانی اطلاعات کاربر احراز هویت شده
+     * به‌روزرسانی اطلاعات کاربر احراز هویت شده.
      *
-     * @param int $userId شناسه کاربر
-     * @param string|null $username نام کاربری
-     * @param string|null $firstName نام کوچک
-     * @param string|null $lastName نام خانوادگی
-     * @param string|null $email ایمیل
-     * @param string|null $password رمز عبور
-     * @return \App\Models\User کاربر به‌روز شده
+     * @param UpdateUserDTO $userDTO حاوی اطلاعات جدید کاربر
+     * @return User کاربر به‌روز شده
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function updateUser(
-        ?string $username = null,
-        ?string $firstName = null,
-        ?string $lastName = null,
-        ?string $email = null,
-        ?string $password = null
-    ) {
+    public function updateUser(UpdateUserDTO $userDTO)
+    {
         // دریافت کاربر احراز هویت شده
         if (Auth::user()) {
 
             $user = Auth::user();
 
             $data = [
-                'username' => $username,
-                'first_name' => $firstName,
-                'last_name' => $lastName,
-                'email' => $email,
-                'password' => $password
+                'username' => $userDTO->username,
+                'first_name' => $userDTO->first_name,
+                'last_name' => $userDTO->last_name,
+                'email' => $userDTO->email,
+                'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
             ];
 
-            $validatedData = Validator::make($data, [
-                'username' => 'nullable|string|unique:users,username,' . $user->id,
-                'first_name' => 'nullable|string|max:255',
-                'last_name' => 'nullable|string|max:255',
-                'email' => 'nullable|string|email|unique:users,email,' . $user->id . '|max:255',
-                'password' => 'nullable|string|min:8'
-            ])->validate();
-
-            if (isset($validatedData['password'])) {
-                $validatedData['password'] = Hash::make($validatedData['password']);
-            }
-
-            $data = array_filter($validatedData);
-
-            $user->update($data);
+            $user->update(array_filter($data));
 
             return $user->fresh();
         }
+
+        return null; // اگر کاربر وارد نشده باشد
     }
 }

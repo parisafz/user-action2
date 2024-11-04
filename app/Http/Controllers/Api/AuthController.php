@@ -2,11 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\DTOs\LoginDTO;
+use App\DTOs\LogoutDTO;
+use App\DTOs\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiErrorResponse;
 use App\Http\Responses\ApiSuccessResponse;
 use App\Services\AuthService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * کلاس AuthController
@@ -31,20 +35,16 @@ class AuthController extends Controller
     /**
      * عملیات لاگین کاربر.
      *
-     * @param Request $request
+     * @param Request $request درخواست حاوی اطلاعات کاربر
      * @return \Illuminate\Http\Response
      */
     public function login(Request $request)
     {
         try {
-            // اعتبارسنجی ورودی‌ها
-            $request->validate([
-                'email' => 'required|email',
-                'password' => 'required|string|min:6',
-            ]);
+            $authDTO = new LoginDTO($request->all());
 
             // ارسال درخواست به سرویس
-            $user = $this->authService->login($request['email'], $request['password']);
+            $user = $this->authService->login($authDTO);
 
             // بررسی نتیجه و ارسال پاسخ مناسب
             if ($user) {
@@ -62,9 +62,13 @@ class AuthController extends Controller
      */
     public function logout()
     {
-
         try {
-            $logout = $this->authService->logout();
+            $user_id = Auth::id();
+
+            $logoutDTO = new LogoutDTO($user_id);
+
+            $logout = $this->authService->logout($logoutDTO);
+
             return new ApiSuccessResponse(null, 'Successfully logged out');
         } catch (\Exception $e) {
             return new ApiErrorResponse('message', 'Failed to logout: ' . $e->getmessage());
@@ -72,26 +76,26 @@ class AuthController extends Controller
     }
 
     /**
-     * به‌روزرسانی اطلاعات کاربر احراز هویت شده
+     * به‌روزرسانی اطلاعات کاربر احراز هویت شده.
      *
-     * @param Request $request
-     * @param int $userId شناسه کاربر
+     * @param Request $request درخواست حاوی اطلاعات جدید کاربر
      * @return \Illuminate\Http\JsonResponse
      */
     public function update(Request $request)
     {
-        // if (!Auth::check()) {
-        //     return new ApiErrorResponse('failed', 'User not authenticated:');
-        // }
+        $userId = Auth::id();
 
         try {
-            $updatedUser = $this->authService->updateUser(
-                $request['username'] ?? null,
-                $request['firstName'] ?? null,
-                $request['lastName'] ?? null,
-                $request['email'] ?? null,
-                $request['password'] ?? null
+            $userDTO = new UpdateUserDTO(
+                $userId,
+                $request->input('username'),
+                $request->input('first_name'),
+                $request->input('last_name'),
+                $request->input('email'),
+                $request->input('password')
             );
+
+            $updatedUser = $this->authService->updateUser($userDTO);
 
             return new ApiSuccessResponse($updatedUser, 'User updated successfully.');
         } catch (\Exception $e) {

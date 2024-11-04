@@ -6,13 +6,19 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * کلاس AdminMiddleware
+ * 
+ * این کلاس مسئول بررسی نقش کاربر برای تأیید دسترسی به 
+ * مسیرهای خاصی است که فقط برای مدیران مجاز است.
+ */
 class AdminMiddleware
 {
     /**
-     * Handle an incoming request.
+     * مدیریت یک درخواست ورودی.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param  \Illuminate\Http\Request  $request درخواست ورودی
+     * @param  \Closure  $next تابع بعدی در زنجیره میانه‌افزار
      * @return mixed
      */
     public function handle(Request $request, Closure $next)
