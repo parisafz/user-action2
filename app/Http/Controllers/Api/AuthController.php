@@ -63,9 +63,9 @@ class AuthController extends Controller
     public function logout()
     {
         try {
-            $user_id = Auth::id();
+            $userId = Auth::id();
 
-            $logoutDTO = new LogoutDTO($user_id);
+            $logoutDTO = new LogoutDTO($userId);
 
             $logout = $this->authService->logout($logoutDTO);
 
@@ -88,9 +88,9 @@ class AuthController extends Controller
         try {
             $userDTO = new UpdateUserDTO(
                 $userId,
-                $request->input('username'),
-                $request->input('first_name'),
-                $request->input('last_name'),
+                $request->input('userName'),
+                $request->input('firstName'),
+                $request->input('lastName'),
                 $request->input('email'),
                 $request->input('password')
             );
@@ -114,7 +114,7 @@ class AuthController extends Controller
             $user = $this->authService->showDetails();
             return new ApiSuccessResponse($user, 'User retrieved successfully.');
         } catch (\Exception $e) {
-            return new ApiErrorResponse('failed', 'User not found.', 404);
+            return new ApiErrorResponse('failed', 'User not found, first login.', 404);
         }
     }
 }

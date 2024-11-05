@@ -18,21 +18,21 @@ class CreateUserDTO
      */
     #[Rules(['required', 'string', 'unique:users', 'max:255'])]
     #[Cast(StringCast::class)]
-    public $username;
+    public $userName;
 
     /**
      * @var string|null نام کوچک کاربر که حداکثر باید 255 کاراکتر باشد.
      */
     #[Rules(['required', 'string', 'max:255'])]
     #[Cast(StringCast::class)]
-    public $first_name;
+    public $firstName;
 
     /**
      * @var string|null نام خانوادگی کاربر که حداکثر باید 255 کاراکتر باشد.
      */
     #[Rules(['required', 'string', 'max:255'])]
     #[Cast(StringCast::class)]
-    public $last_name;
+    public $lastName;
 
     /**
      * @var string|null ایمیل کاربر که باید منحصر به فرد، معتبر و حداکثر 255 کاراکتر باشد.
@@ -51,22 +51,22 @@ class CreateUserDTO
     /**
      * سازنده کلاس CreateUserDTO.
      *
-     * @param string|null $username نام کاربری کاربر.
-     * @param string|null $first_name نام کوچک کاربر.
-     * @param string|null $last_name نام خانوادگی کاربر.
+     * @param string|null $userName نام کاربری کاربر.
+     * @param string|null $firstName نام کوچک کاربر.
+     * @param string|null $lastName نام خانوادگی کاربر.
      * @param string|null $email ایمیل کاربر.
      * @param string|null $password رمز عبور کاربر.
      */
     public function __construct(
-        ?string $username,
-        ?string $first_name,
-        ?string $last_name,
+        ?string $userName,
+        ?string $firstName,
+        ?string $lastName,
         ?string $email,
         ?string $password
     ) {
-        $this->username = $username;
-        $this->first_name = $first_name;
-        $this->last_name = $last_name;
+        $this->userName = $userName;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
         $this->email = $email;
         $this->password = $password;
     }

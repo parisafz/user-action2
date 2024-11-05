@@ -9,7 +9,6 @@ use App\Http\Responses\ApiErrorResponse;
 use App\Http\Responses\ApiSuccessResponse;
 use App\Services\UserService;
 use Illuminate\Http\Request;
-use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
@@ -41,7 +40,7 @@ class UserController extends Controller
     public function index(Request $request)
     {
         try {
-            $perPage = (int) $request->input('per_page', 10);
+            $perPage = (int) $request->input('perPage', 10);
             $users = $this->userService->getAllUsers($perPage);
 
             return new ApiSuccessResponse($users, 'Users retrieved successfully.');
@@ -59,18 +58,18 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $userDTO = new CreateUserDTO(
-            $request['username'],
-            $request['first_name'],
-            $request['last_name'],
+            $request['userName'],
+            $request['firstName'],
+            $request['lastName'],
             $request['email'],
             $request['password']
         );
 
         try {
             $user = $this->userService->createUser(
-                $userDTO->username,
-                $userDTO->first_name,
-                $userDTO->last_name,
+                $userDTO->userName,
+                $userDTO->firstName,
+                $userDTO->lastName,
                 $userDTO->email,
                 $userDTO->password
             );
@@ -101,17 +100,17 @@ class UserController extends Controller
      * بروزرسانی اطلاعات یک کاربر خاص.
      *
      * @param \Illuminate\Http\Request $request درخواست حاوی اطلاعات جدید کاربر
-     * @param int $user_id شناسه کاربر
+     * @param int $userId شناسه کاربر
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $user_id): ApiSuccessResponse | ApiErrorResponse
+    public function update(Request $request, $userId): ApiSuccessResponse | ApiErrorResponse
     {
         try {
             $userDTO = new UpdateUserDTO(
-                $user_id,
-                $request->input('username'),
-                $request->input('first_name'),
-                $request->input('last_name'),
+                $userId,
+                $request->input('userName'),
+                $request->input('firstName'),
+                $request->input('lastName'),
                 $request->input('email'),
                 $request->input('password')
             );

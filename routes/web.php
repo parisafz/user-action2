@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Models\User;
 
 Route::get('/', function () {
-    // User::factory()->count(10)->create();
+    // User::factory()->count(20)->create();
     return view('welcome');
 });
 

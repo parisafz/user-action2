@@ -18,15 +18,15 @@ class LogoutDTO
      */
     #[Rules(['nullable', 'integer', 'unique:users', 'max:255'])]
     #[Cast(IntegerCast::class)]
-    public int $user_id;
+    public int $userId;
 
     /**
      * سازنده کلاس LogoutDTO.
      *
      * @param int $user_id شناسه کاربر.
      */
-    public function __construct(int $user_id)
+    public function __construct(int $userId)
     {
-        $this->user_id = $user_id;
+        $this->userId = $userId;
     }
 }

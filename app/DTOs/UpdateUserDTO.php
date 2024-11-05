@@ -19,28 +19,28 @@ class UpdateUserDTO
      */
     #[Rules(['nullable', 'integer', 'unique:users', 'max:255'])]
     #[Cast(IntegerCast::class)]
-    public int $user_id;
+    public int $userId;
 
     /**
      * @var string|null نام کاربری جدید کاربر که باید حداکثر 255 کاراکتر باشد.
      */
     #[Rules(['nullable', 'string', 'unique:users', 'max:255'])]
     #[Cast(StringCast::class)]
-    public ?string $username;
+    public ?string $userName;
 
     /**
      * @var string|null نام کوچک جدید کاربر که حداکثر باید 255 کاراکتر باشد.
      */
     #[Rules(['nullable', 'string', 'max:255'])]
     #[Cast(StringCast::class)]
-    public ?string $first_name;
+    public ?string $firstName;
 
     /**
      * @var string|null نام خانوادگی جدید کاربر که حداکثر باید 255 کاراکتر باشد.
      */
     #[Rules(['nullable', 'string', 'max:255'])]
     #[Cast(StringCast::class)]
-    public ?string $last_name;
+    public ?string $lastName;
 
     /**
      * @var string|null ایمیل جدید کاربر که باید معتبر و حداکثر 255 کاراکتر باشد.
@@ -59,25 +59,25 @@ class UpdateUserDTO
     /**
      * سازنده کلاس UpdateUserDTO.
      *
-     * @param int $user_id شناسه کاربر.
-     * @param string|null $username نام کاربری جدید.
-     * @param string|null $first_name نام کوچک جدید.
-     * @param string|null $last_name نام خانوادگی جدید.
+     * @param int $userId شناسه کاربر.
+     * @param string|null $userName نام کاربری جدید.
+     * @param string|null $firstName نام کوچک جدید.
+     * @param string|null $lastName نام خانوادگی جدید.
      * @param string|null $email ایمیل جدید.
      * @param string|null $password رمز عبور جدید.
      */
     public function __construct(
-        int $user_id,
-        ?string $username,
-        ?string $first_name,
-        ?string $last_name,
+        int $userId,
+        ?string $userName,
+        ?string $firstName,
+        ?string $lastName,
         ?string $email,
         ?string $password
     ) {
-        $this->user_id = $user_id;
-        $this->username = $username;
-        $this->first_name = $first_name;
-        $this->last_name = $last_name;
+        $this->userId = $userId;
+        $this->userName = $userName;
+        $this->firstName = $firstName;
+        $this->lastName = $lastName;
         $this->email = $email;
         $this->password = $password;
     }

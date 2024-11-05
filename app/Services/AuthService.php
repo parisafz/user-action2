@@ -5,7 +5,6 @@ namespace App\Services;
 use App\DTOs\LoginDTO;
 use App\DTOs\LogoutDTO;
 use App\DTOs\UpdateUserDTO;
-use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -52,7 +51,7 @@ class AuthService
     {
         $user = Auth::user();
 
-        if ($user && $user->id === $logoutDTO->user_id) {
+        if ($user && $user->id === $logoutDTO->userId) {
             $user->tokens()->delete();
 
             return true;
@@ -75,9 +74,9 @@ class AuthService
             $userData = [
                 'id' => $user->id,
                 'role' => $user->role,
-                'username' => $user->username,
-                'first_name' => $user->first_name,
-                'last_name' => $user->last_name,
+                'userName' => $user->userName,
+                'firstName' => $user->firstName,
+                'lastName' => $user->lastName,
                 'email' => $user->email,
             ];
 
@@ -102,9 +101,9 @@ class AuthService
             $user = Auth::user();
 
             $data = [
-                'username' => $userDTO->username,
-                'first_name' => $userDTO->first_name,
-                'last_name' => $userDTO->last_name,
+                'userName' => $userDTO->userName,
+                'firstName' => $userDTO->firstName,
+                'lastName' => $userDTO->lastName,
                 'email' => $userDTO->email,
                 'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
             ];

@@ -26,7 +26,7 @@ class UserService
         int $perPage = 10,
         int $page = null,
     ) {
-        $users = User::select('id', 'role', 'username', 'first_name', 'last_name', 'email')
+        $users = User::select('id', 'role', 'userName', 'firstName', 'lastName', 'email')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return $users;
@@ -35,25 +35,25 @@ class UserService
     /**
      * ایجاد یک کاربر جدید.
      *
-     * @param string $username نام کاربری
-     * @param string $first_name نام کوچک
-     * @param string $last_name نام خانوادگی
+     * @param string $userName نام کاربری
+     * @param string $firstName نام کوچک
+     * @param string $lastName نام خانوادگی
      * @param string $email ایمیل
      * @param string $password رمز عبور
      * @return User کاربر جدید ایجاد شده
      * @throws ValidationException
      */
     public function createUser(
-        string $username,
-        string $first_name,
-        string $last_name,
+        string $userName,
+        string $firstName,
+        string $lastName,
         string $email,
         string $password
     ): User {
         $data = [
-            'username' => $username,
-            'first_name' => $first_name,
-            'last_name' => $last_name,
+            'userName' => $userName,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
             'email' => $email,
             'password' => $password
         ];
@@ -69,7 +69,7 @@ class UserService
      */
     public function getUserById($userId)
     {
-        $user = User::select('id', 'role', 'username', 'first_name', 'last_name', 'email')->findOrFail($userId);
+        $user = User::select('id', 'role', 'userName', 'firstName', 'lastName', 'email')->findOrFail($userId);
 
         return $user;
     }
@@ -83,12 +83,12 @@ class UserService
      */
     public function updateUser(UpdateUserDTO $userDTO)
     {
-        $user = $this->getUserById($userDTO->user_id);
+        $user = $this->getUserById($userDTO->userId);
 
         $data = [
-            'username' => $userDTO->username,
-            'first_name' => $userDTO->first_name,
-            'last_name' => $userDTO->last_name,
+            'userName' => $userDTO->userName,
+            'firstName' => $userDTO->firstName,
+            'lastName' => $userDTO->lastName,
             'email' => $userDTO->email,
             'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
         ];
