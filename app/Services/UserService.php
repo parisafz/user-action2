@@ -2,10 +2,10 @@
 
 namespace App\Services;
 
-use App\DTOs\UpdateUserDTO;
 use App\Models\User;
+use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 /**
  * Class UserService
@@ -22,7 +22,7 @@ class UserService
      * @param int|null $page شماره صفحه
      * @return \Illuminate\Pagination\LengthAwarePaginator
      */
-    public function getAllUsers(
+    public function getAll(
         int $perPage = 10,
         int $page = null,
     ) {
@@ -43,7 +43,7 @@ class UserService
      * @return User کاربر جدید ایجاد شده
      * @throws ValidationException
      */
-    public function createUser(
+    public function store(
         string $userName,
         string $firstName,
         string $lastName,
@@ -55,42 +55,44 @@ class UserService
             'firstName' => $firstName,
             'lastName' => $lastName,
             'email' => $email,
-            'password' => $password
+            'password' =>  Hash::make($password)
         ];
 
         return User::create($data);
     }
 
     /**
-     * دریافت یک کاربر خاص.
+     * به‌روزرسانی اطلاعات کاربر با استفاده از شناسه کاربر.
      *
      * @param int $userId شناسه کاربر
-     * @return User کاربر
+     * @param string|null $userName نام کاربری
+     * @param string|null $firstName نام کوچک
+     * @param string|null $lastName نام خانوادگی
+     * @param string|null $email ایمیل
+     * @param string|null $password رمز عبور جدید (اختیاری)
+     * @return User اطلاعات به‌روزرسانی شده کاربر
+     * @throws Exception در صورت عدم یافتن کاربر
      */
-    public function getUserById($userId)
-    {
-        $user = User::select('id', 'role', 'userName', 'firstName', 'lastName', 'email')->findOrFail($userId);
+    public function update(
+        int $userId,
+        ?string $userName,
+        ?string $firstName,
+        ?string $lastName,
+        ?string $email,
+        ?string $password = null
+    ) {
+        $user = $this->getById($userId);
 
-        return $user;
-    }
-
-    /**
-     * بروزرسانی اطلاعات یک کاربر خاص.
-     *
-     * @param UpdateUserDTO $userDTO حاوی اطلاعات جدید کاربر
-     * @return User کاربر به‌روز شده
-     * @throws ValidationException
-     */
-    public function updateUser(UpdateUserDTO $userDTO)
-    {
-        $user = $this->getUserById($userDTO->userId);
+        if (!$user) {
+            throw new Exception('not_found');
+        }
 
         $data = [
-            'userName' => $userDTO->userName,
-            'firstName' => $userDTO->firstName,
-            'lastName' => $userDTO->lastName,
-            'email' => $userDTO->email,
-            'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
+            'userName' => $userName,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'email' => $email,
+            'password' =>  $password ? Hash::make($password) : null
         ];
 
         $user->update(array_filter($data));
@@ -99,15 +101,97 @@ class UserService
     }
 
     /**
+     * به‌روزرسانی اطلاعات کاربر وارد شده.
+     *
+     * @param int $userId شناسه کاربر
+     * @param string|null $userName نام کاربری
+     * @param string|null $firstName نام کوچک
+     * @param string|null $lastName نام خانوادگی
+     * @param string|null $email ایمیل
+     * @param string|null $password رمز عبور جدید (اختیاری)
+     * @return User اطلاعات به‌روزرسانی شده کاربر
+     * @throws Exception در صورت عدم احراز هویت یا عدم مجوز
+     */
+    public function updateProfile(
+        int $userId,
+        ?string $userName,
+        ?string $firstName,
+        ?string $lastName,
+        ?string $email,
+        ?string $password = null
+    ) {
+        $user = Auth::user();
+
+        if (!$user) {
+            throw new Exception('unauthenticated');
+        }
+
+        if ($user->id !== $userId) {
+            throw new Exception('unauthorized to update this user');
+        }
+
+        $data = [
+            'userName' => $userName,
+            'firstName' => $firstName,
+            'lastName' => $lastName,
+            'email' => $email,
+            'password' =>  $password ? Hash::make($password) : null
+        ];
+
+        $user->update(array_filter($data));
+
+        return $user->fresh();
+    }
+
+    /**
+     * دریافت اطلاعات یک کاربر خاص با شناسه.
+     *
+     * @param int $userId شناسه کاربر
+     * @return User کاربر
+     */
+    public function getById(int $userId)
+    {
+        $user = User::select('id', 'role', 'userName', 'firstName', 'lastName', 'email')->findOrFail($userId);
+
+        return $user;
+    }
+
+    /**
      * حذف یک کاربر خاص.
      *
      * @param int $userId شناسه کاربر
      * @return void
      */
-    public function deleteUser(int $userId)
+    public function delete(int $userId)
     {
         User::where(['id' => $userId])->findOrFail($userId);
 
         return User::destroy($userId);
+    }
+
+    /**
+     * نمایش پروفایل کاربر وارد شده.
+     *
+     * @return array اطلاعات پروفایل کاربر
+     * @throws Exception در صورت عدم احراز هویت
+     */
+    public function showProfile()
+    {
+        $user = Auth::user();
+
+        if ($user) {
+            $userData = [
+                'id' => $user->id,
+                'role' => $user->role,
+                'userName' => $user->userName,
+                'firstName' => $user->firstName,
+                'lastName' => $user->lastName,
+                'email' => $user->email,
+            ];
+
+            return $userData;
+        }
+
+        throw new Exception('unauthenticated'); // اگر کاربر وارد نشده باشد
     }
 }

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\DTOs\LoginDTO;
 use App\DTOs\LogoutDTO;
-use App\DTOs\UpdateUserDTO;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiErrorResponse;
 use App\Http\Responses\ApiSuccessResponse;
@@ -33,10 +32,11 @@ class AuthController extends Controller
     }
 
     /**
-     * عملیات لاگین کاربر.
+     * ورود کاربر با استفاده از اطلاعات درخواست.
      *
-     * @param Request $request درخواست حاوی اطلاعات کاربر
-     * @return \Illuminate\Http\Response
+     * @param Request $request اطلاعات درخواست شامل ایمیل و رمز عبور
+     * @return ApiSuccessResponse|ApiErrorResponse پاسخ موفق یا خطا
+     * @throws Exception در صورت بروز خطا در فرآیند ورود
      */
     public function login(Request $request)
     {
@@ -44,21 +44,25 @@ class AuthController extends Controller
             $authDTO = new LoginDTO($request->all());
 
             // ارسال درخواست به سرویس
-            $user = $this->authService->login($authDTO);
+            $user = $this->authService->login(
+                $authDTO->email,
+                $authDTO->password
+            );
 
             // بررسی نتیجه و ارسال پاسخ مناسب
             if ($user) {
-                return new ApiSuccessResponse($user, 'Login successfuly.');
+                return new ApiSuccessResponse($user, 'login_successfuly');
             }
         } catch (\Exception $e) {
-            return new ApiErrorResponse('failed', 'Failed to login: ' . $e->getmessage());
+            return new ApiErrorResponse('login_failed' . $e->getmessage());
         }
     }
 
     /**
-     * عملیات خروج از سیستم.
+     * خروج کاربر.
      *
-     * @return \Illuminate\Http\Response
+     * @return ApiSuccessResponse|ApiErrorResponse پاسخ موفق یا خطا
+     * @throws Exception در صورت بروز خطا در فرآیند خروج
      */
     public function logout()
     {
@@ -67,54 +71,11 @@ class AuthController extends Controller
 
             $logoutDTO = new LogoutDTO($userId);
 
-            $logout = $this->authService->logout($logoutDTO);
+            $this->authService->logout($logoutDTO);
 
-            return new ApiSuccessResponse(null, 'Successfully logged out');
+            return new ApiSuccessResponse(null, 'logout_successfully');
         } catch (\Exception $e) {
-            return new ApiErrorResponse('message', 'Failed to logout: ' . $e->getmessage());
-        }
-    }
-
-    /**
-     * به‌روزرسانی اطلاعات کاربر احراز هویت شده.
-     *
-     * @param Request $request درخواست حاوی اطلاعات جدید کاربر
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function update(Request $request)
-    {
-        $userId = Auth::id();
-
-        try {
-            $userDTO = new UpdateUserDTO(
-                $userId,
-                $request->input('userName'),
-                $request->input('firstName'),
-                $request->input('lastName'),
-                $request->input('email'),
-                $request->input('password')
-            );
-
-            $updatedUser = $this->authService->updateUser($userDTO);
-
-            return new ApiSuccessResponse($updatedUser, 'User updated successfully.');
-        } catch (\Exception $e) {
-            return new ApiErrorResponse('message', 'Update failed: ' . $e->getMessage(), 400);
-        }
-    }
-
-    /**
-     * دریافت اطلاعات کاربر احراز هویت شده
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function showUser()
-    {
-        try {
-            $user = $this->authService->showDetails();
-            return new ApiSuccessResponse($user, 'User retrieved successfully.');
-        } catch (\Exception $e) {
-            return new ApiErrorResponse('failed', 'User not found, first login.', 404);
+            return new ApiErrorResponse('logout_failed' . $e->getmessage());
         }
     }
 }

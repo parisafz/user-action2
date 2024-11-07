@@ -2,13 +2,8 @@
 
 namespace App\Services;
 
-use App\DTOs\LoginDTO;
-use App\DTOs\LogoutDTO;
-use App\DTOs\UpdateUserDTO;
-use App\Models\User;
+use Exception;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 /**
  * کلاس AuthService
@@ -19,15 +14,21 @@ use Illuminate\Validation\ValidationException;
 class AuthService
 {
     /**
-     * انجام عملیات لاگین کاربر.
+     * ورود کاربر با استفاده از ایمیل و رمز عبور.
      *
-     * @param LoginDTO $authDTO حاوی اطلاعات ورود کاربر
-     * @return string|null توکن دسترسی کاربر یا null در صورت عدم موفقیت
-     * @throws ValidationException
+     * @param string $email ایمیل کاربر
+     * @param string $password رمز عبور کاربر
+     * @return string توکن دسترسی کاربر
+     * @throws Exception در صورت عدم موفقیت در ورود
      */
-    public function login(LoginDTO $authDTO)
-    {
-        $data = ['email' => $authDTO->email, 'password' => $authDTO->password];
+    public function login(
+        string $email,
+        string $password
+    ) {
+        $data = [
+            'email' => $email,
+            'password' => $password
+        ];
 
         if (Auth::attempt($data)) {
             $user = Auth::user();
@@ -38,81 +39,26 @@ class AuthService
             return $token;
         }
 
-        return null; // در صورت عدم موفقیت
+        throw new Exception('unauthorized to login user'); // در صورت عدم موفقیت
     }
 
     /**
-     * انجام عملیات خروج کاربر.
+     * خروج کاربر با استفاده از شناسه کاربر.
      *
-     * @param LogoutDTO $logoutDTO حاوی شناسه کاربر
-     * @return bool
+     * @param $userId شناسه کاربر
+     * @return bool نتیجه عملیات خروج
+     * @throws Exception در صورت عدم موفقیت در خروج
      */
-    public function logout(LogoutDTO $logoutDTO)
+    public function logout($userId)
     {
         $user = Auth::user();
 
-        if ($user && $user->id === $logoutDTO->userId) {
+        if ($user && $user->id === $userId) {
             $user->tokens()->delete();
 
             return true;
         }
 
-        return false; // در صورت عدم موفقیت
-    }
-
-    /**
-     * نمایش جزئیات کاربر احراز هویت شده.
-     *
-     * @return array|null اطلاعات کاربر به صورت آرایه یا null اگر کاربر وارد نشده باشد.
-     */
-    public function showDetails()
-    {
-        if (Auth::user()) {
-
-            $user = Auth::user();
-
-            $userData = [
-                'id' => $user->id,
-                'role' => $user->role,
-                'userName' => $user->userName,
-                'firstName' => $user->firstName,
-                'lastName' => $user->lastName,
-                'email' => $user->email,
-            ];
-
-            return $userData;
-        }
-
-        return null; // اگر کاربر وارد نشده باشد
-    }
-
-    /**
-     * به‌روزرسانی اطلاعات کاربر احراز هویت شده.
-     *
-     * @param UpdateUserDTO $userDTO حاوی اطلاعات جدید کاربر
-     * @return User کاربر به‌روز شده
-     * @throws \Illuminate\Validation\ValidationException
-     */
-    public function updateUser(UpdateUserDTO $userDTO)
-    {
-        // دریافت کاربر احراز هویت شده
-        if (Auth::user()) {
-
-            $user = Auth::user();
-
-            $data = [
-                'userName' => $userDTO->userName,
-                'firstName' => $userDTO->firstName,
-                'lastName' => $userDTO->lastName,
-                'email' => $userDTO->email,
-                'password' =>  $userDTO->password ? Hash::make($userDTO->password) : null
-            ];
-
-            $user->update(array_filter($data));
-
-            return $user->fresh();
-        }
-
-        return null; // اگر کاربر وارد نشده باشد
+        throw new Exception('unauthorized to logout user'); // در صورت عدم موفقیت
     }
 }

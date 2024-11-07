@@ -5,7 +5,7 @@ namespace App\DTOs;
 use WendellAdriel\ValidatedDTO\Attributes\Cast;
 use WendellAdriel\ValidatedDTO\Attributes\Rules;
 use WendellAdriel\ValidatedDTO\Casting\StringCast;
-use WendellAdriel\ValidatedDTO\Concerns\EmptyCasts;
+
 
 /**
  * کلاس LoginDTO برای مدیریت اطلاعات ورود کاربر.
@@ -14,8 +14,6 @@ use WendellAdriel\ValidatedDTO\Concerns\EmptyCasts;
  */
 class LoginDTO
 {
-    use EmptyCasts;
-
     /**
      * @var string|null ایمیل کاربر که باید معتبر و فرمت درست داشته باشد.
      */

@@ -14,6 +14,9 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
     use HasApiTokens;
 
+    // مشخص کردن نام جدول
+    protected $table = 'users';
+
     /**
      * The attributes that are mass assignable.
      *
